@@ -15,15 +15,16 @@ Personal tool for a friend who is a *client* in a WhatsApp group with his care t
 ## Status / next steps
 - Server tested locally with seed data and a mocked Anthropic API; live WhatsApp linking not yet tested (needs Railway deploy).
 - iOS: `ios/CareTracker.xcodeproj` is hand-written (no XcodeGen needed); `ios/project.yml` is kept in sync for XcodeGen users. Team `Z428Z377RQ`, bundle ID `com.ahrimane.caretracker`, iOS 17+.
-- The iOS app has NOT been compiled yet (written in a Linux sandbox, syntax-checked only). Expect a few type errors.
+- The iOS app compiles cleanly (Xcode 26.6) and is on TestFlight: version 1.0, first build `2611151520` uploaded 2026-11-15. App Store Connect record is named "Dietitian manager" (Apple ID 6835054917).
 - GitHub Actions can't run: the account is locked for a billing issue. Build locally instead.
 
-## Immediate task: get the iOS app onto TestFlight
-1. `cd ios && xcodebuild -project CareTracker.xcodeproj -scheme CareTracker -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` — fix compile errors until it builds.
-2. Make sure the App Store Connect app record exists for `com.ahrimane.caretracker` (create it at appstoreconnect.apple.com if not; register the bundle ID first if needed).
-3. Archive + upload: `cd ios && TEAM_ID=Z428Z377RQ ./testflight.sh` (uses the Apple account signed into Xcode; needs Xcode 26+). If XcodeGen is missing the script installs it via Homebrew; it regenerates the project from project.yml.
+## Shipping a new iOS build to TestFlight
+1. `cd ios && xcodebuild -project CareTracker.xcodeproj -scheme CareTracker -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build` — quick compile check.
+2. Archive + upload: `cd ios && TEAM_ID=Z428Z377RQ ./testflight.sh` (uses the Apple account signed into Xcode; needs Xcode 26+). If XcodeGen is missing the script installs it via Homebrew.
+   - The script regenerates `CareTracker.xcodeproj` from project.yml and leaves `ios/build/`; discard that churn afterwards (`git checkout -- ios/CareTracker.xcodeproj`) unless project.yml actually changed.
    - Alternatively sign with the App Store Connect API key: `ASC_KEY_PATH=~/path/AuthKey_L43PBN9Y3N.p8 ASC_KEY_ID=L43PBN9Y3N ASC_ISSUER_ID=<issuer> TEAM_ID=Z428Z377RQ ./testflight.sh`.
-4. Commit fixes and push to github.com/asonkiya/care-tracker.
+   - If signing fails with "PLA Update available", the account holder must accept the latest agreement at developer.apple.com/account.
+3. Commit and push to github.com/asonkiya/care-tracker.
 
 ## Later
 - Deploy the server to Railway (volume at /data; env DASHBOARD_PASSWORD, ANTHROPIC_API_KEY, DATA_DIR=/data).
