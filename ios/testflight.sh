@@ -8,7 +8,7 @@ cd "$(dirname "$0")"
 
 : "${TEAM_ID:?Set TEAM_ID to your Apple Developer Team ID (developer.apple.com/account → Membership details)}"
 
-XCODE_MAJOR=$(xcodebuild -version | head -1 | awk '{print $2}' | cut -d. -f1)
+XCODE_MAJOR=$(xcodebuild -version | awk 'NR==1{print $2}' | cut -d. -f1)
 if [ "$XCODE_MAJOR" -lt 26 ]; then echo "App Store Connect needs Xcode 26 or later (found $XCODE_MAJOR)."; exit 1; fi
 
 command -v xcodegen >/dev/null || brew install xcodegen
