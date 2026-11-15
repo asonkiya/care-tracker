@@ -14,11 +14,11 @@ Personal tool for a friend who is a *client* in a WhatsApp group with his care t
 
 ## Status / next steps
 - Server is deployed on Railway: project `care-tracker`, service `care-tracker`, https://care-tracker-production-90cb661f.up.railway.app, volume mounted at `/data`. Vars set: `DASHBOARD_PASSWORD` (also in the local gitignored `.env`), `DATA_DIR=/data`, `PORT=3000` (the domain targets 3000). Redeploy with `railway up --service care-tracker`.
-- Still to do on the live server: set `ANTHROPIC_API_KEY`, then scan the Setup QR with the phone that is in the care group and pick the group. The QR is served, but real linking, history backfill and extraction against the real API are untested.
+- Still to do on the live server (`ANTHROPIC_API_KEY` is set): link WhatsApp in Setup (scan the QR, or use the phone-number pairing code on the same phone) and pick the group. The QR is served, but real linking, history backfill and extraction against the real API are untested.
 - Local dev: run the server in Docker (`docker build`, as Railway does); better-sqlite3 13 segfaults on Node 20 and needs Node 22+.
 - The iOS app has the Railway URL built in (`AppModel.defaultServer`); sign-in only asks for the password.
 - iOS: `ios/CareTracker.xcodeproj` is hand-written (no XcodeGen needed); `ios/project.yml` is kept in sync for XcodeGen users. Team `Z428Z377RQ`, bundle ID `com.ahrimane.caretracker`, iOS 17+.
-- The iOS app compiles cleanly (Xcode 26.6) and is on TestFlight: version 1.0, latest build `2611151638` uploaded 2026-11-15. App Store Connect record is named "Dietitian manager" (Apple ID 6835054917).
+- The iOS app compiles cleanly (Xcode 26.6) and is on TestFlight: version 1.0, latest build `2611151701` uploaded 2026-11-15. App Store Connect record is named "Dietitian manager" (Apple ID 6835054917).
 - GitHub Actions can't run: the account is locked for a billing issue. Build locally instead.
 
 ## Shipping a new iOS build to TestFlight
