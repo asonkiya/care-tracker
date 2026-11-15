@@ -36,7 +36,11 @@ struct API {
         let (data, response) = try await URLSession.shared.data(for: req)
         let code = (response as? HTTPURLResponse)?.statusCode ?? 0
         if code == 401 { throw APIError.unauthorized }
-        guard (200..<300).contains(code) else { throw APIError.server("Server error (\(code))") }
+        guard (200..<300).contains(code) else {
+            // the server explains some failures as {"error": "..."}
+            let message = (try? JSONSerialization.jsonObject(with: data) as? [String: Any])?["error"] as? String
+            throw APIError.server(message ?? "Server error (\(code))")
+        }
         return data
     }
 

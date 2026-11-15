@@ -94,6 +94,7 @@ struct ExtractionState: Decodable {
 struct ServerStatus: Decodable {
     let whatsapp: String
     let qr: String?
+    let pairingCode: String?
     let me: String?
     let group: GroupRef?
     let extraction: ExtractionState

@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import { config } from './config.js';
 import { db, resetExtraction } from './db.js';
-import { wa, listGroups, selectGroup, unlink, trackedGroup } from './whatsapp.js';
+import { wa, listGroups, selectGroup, unlink, trackedGroup, requestPairing } from './whatsapp.js';
 import { state, runExtraction, fmtDate } from './extract.js';
 
 const app = express();
@@ -33,12 +33,17 @@ const today = () => fmtDate(Date.now() / 1000);
 
 app.get('/api/status', (_req, res) => {
   res.json({
-    whatsapp: wa.status, qr: wa.qr, me: wa.me?.name || wa.me?.id || null,
+    whatsapp: wa.status, qr: wa.qr, pairingCode: wa.pairingCode, me: wa.me?.name || wa.me?.id || null,
     group: trackedGroup(),
     extraction: { ...state, pending: db.prepare('SELECT COUNT(*) n FROM messages WHERE processed = 0').get().n },
     messages: db.prepare('SELECT COUNT(*) n FROM messages').get().n,
     hasKey: !!config.anthropicKey,
   });
+});
+
+app.post('/api/pair', async (req, res) => {
+  try { res.json({ code: await requestPairing(req.body?.phone) }); }
+  catch (e) { res.status(400).json({ error: e.message }); }
 });
 
 app.get('/api/groups', async (_req, res) => res.json(await listGroups()));

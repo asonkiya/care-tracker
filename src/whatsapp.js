@@ -16,6 +16,7 @@ export const wa = {
   sock: null,
   status: 'starting',   // starting | qr | open | closed
   qr: null,             // data URL of the current login QR
+  pairingCode: null,    // 8-char code when linking by phone number instead of the QR
   me: null,
   onNewMessages: () => {},
 };
@@ -122,6 +123,16 @@ async function maybeAutoSelect() {
   }
 }
 
+/** Link without a second screen: WhatsApp → Linked devices → Link with phone number instead. */
+export async function requestPairing(phone) {
+  const digits = String(phone || '').replace(/\D/g, '');
+  if (digits.length < 8 || digits.length > 15) throw new Error('Enter the full phone number with country code, e.g. 919876543210');
+  if (!wa.sock || wa.status !== 'qr') throw new Error('WhatsApp is not ready to link yet. Try again in a few seconds.');
+  const code = await wa.sock.requestPairingCode(digits);
+  wa.pairingCode = `${code.slice(0, 4)}-${code.slice(4)}`;
+  return wa.pairingCode;
+}
+
 export async function unlink() {
   try { await wa.sock?.logout(); } catch {}
   fs.rmSync(authDir, { recursive: true, force: true });
@@ -146,21 +157,25 @@ export async function startWhatsApp() {
   sock.ev.on('connection.update', async ({ connection, lastDisconnect, qr }) => {
     if (qr) { wa.status = 'qr'; wa.qr = await QRCode.toDataURL(qr, { margin: 1, width: 320 }); }
     if (connection === 'open') {
-      wa.status = 'open'; wa.qr = null; wa.me = sock.user;
+      wa.status = 'open'; wa.qr = null; wa.pairingCode = null; wa.me = sock.user;
       console.log(`WhatsApp connected as ${sock.user?.name || sock.user?.id}`);
       setTimeout(() => maybeAutoSelect().catch(() => {}), 5000);
     }
     if (connection === 'close') {
       wa.status = 'closed';
       const code = lastDisconnect?.error?.output?.statusCode;
-      if (code === DisconnectReason.loggedOut) {
-        console.log('WhatsApp session logged out — clearing credentials, a new QR will be shown.');
+      // A pairing code that was never entered leaves half-registered credentials behind; start clean.
+      // (restartRequired is the normal reconnect right after a successful pairing.)
+      const abandonedPairing = wa.pairingCode && code !== DisconnectReason.restartRequired;
+      wa.pairingCode = null;
+      if (code === DisconnectReason.loggedOut || abandonedPairing) {
+        console.log(`WhatsApp ${abandonedPairing ? 'pairing code expired' : 'session logged out'} — clearing credentials, a new QR will be shown.`);
         fs.rmSync(authDir, { recursive: true, force: true });
         fs.mkdirSync(authDir, { recursive: true });
       } else {
         console.log(`WhatsApp connection closed (${code}), reconnecting…`);
       }
-      setTimeout(startWhatsApp, code === DisconnectReason.loggedOut ? 1000 : 3000);
+      setTimeout(startWhatsApp, code === DisconnectReason.loggedOut || abandonedPairing ? 1000 : 3000);
     }
   });
 

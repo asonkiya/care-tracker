@@ -203,7 +203,10 @@ async function renderSetup() {
   if (s.whatsapp === 'qr' && s.qr) {
     html += `<div class="card" style="padding:16px"><div class="t">Link WhatsApp</div>
       <div class="m">On the phone: WhatsApp → Settings → Linked devices → Link a device, then scan this. It refreshes automatically.</div>
-      <img class="qr" src="${s.qr}"></div>`;
+      <img class="qr" src="${s.qr}">
+      <div class="m">${s.pairingCode
+        ? `Or in WhatsApp choose <b>Link with phone number instead</b> and enter: <b style="font-size:20px;letter-spacing:2px">${esc(s.pairingCode)}</b>`
+        : `Same phone? <a href="#setup" onclick="pair();return false">Link with a code instead</a>.`}</div></div>`;
   } else if (s.whatsapp !== 'open') {
     html += `<div class="card"><div class="empty">Connecting to WhatsApp…</div></div>`;
   }
@@ -232,6 +235,13 @@ async function pick(jid, name) {
   const r = await api('/api/group', { method: 'POST', body: { jid, name } });
   alert(`Tracking "${name}". ${r.backfilled} past messages imported — the dashboard fills in over the next few minutes.`);
   go('today');
+}
+async function pair() {
+  const phone = prompt('Phone number of the WhatsApp account, with country code (e.g. 919876543210)');
+  if (!phone) return;
+  const r = await fetch('/api/pair', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone }) });
+  if (!r.ok) alert((await r.json()).error);
+  render();
 }
 async function post(p) { await api(p, { method: 'POST' }); setTimeout(render, 600); }
 async function check(id, el) { const r = await api('/api/check/' + id, { method: 'POST' }); el.classList.toggle('on', r.checked); el.textContent = r.checked ? '✓' : ''; }

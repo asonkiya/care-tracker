@@ -331,6 +331,9 @@ struct SetupView: View {
     @State private var confirmRebuild = false
     @State private var confirmUnlink = false
     @State private var notice: String?
+    @State private var phone = ""
+    @State private var pairing = false
+    @State private var pairError: String?
 
     var body: some View {
         List {
@@ -344,6 +347,30 @@ struct SetupView: View {
                         Text("Link WhatsApp")
                     } footer: {
                         Text("Scan from the phone whose WhatsApp is in the group: WhatsApp → Settings → Linked devices → Link a device. Use another screen (e.g. open the Railway URL on a laptop) if this is the same phone.")
+                    }
+                }
+                if s.whatsapp == "qr" {
+                    Section {
+                        if let code = s.pairingCode {
+                            Text(code).font(.system(.title, design: .monospaced)).bold()
+                                .frame(maxWidth: .infinity).textSelection(.enabled)
+                        } else {
+                            TextField("Phone number with country code", text: $phone)
+                                .keyboardType(.phonePad)
+                            Button {
+                                Task { await requestCode() }
+                            } label: {
+                                if pairing { ProgressView() } else { Text("Get a code") }
+                            }
+                            .disabled(phone.filter(\.isNumber).count < 8 || pairing)
+                        }
+                        if let pairError { Text(pairError).foregroundStyle(.red).font(.subheadline) }
+                    } header: {
+                        Text("Or link with a code")
+                    } footer: {
+                        Text(s.pairingCode != nil
+                             ? "In WhatsApp: Settings → Linked devices → Link a device → Link with phone number instead, then enter this code. It expires after a couple of minutes."
+                             : "Works on this same phone, no second screen needed. Enter the number of the WhatsApp account that is in the group, e.g. 919876543210.")
                     }
                 }
                 if s.whatsapp == "open" && s.group == nil {
@@ -406,6 +433,16 @@ struct SetupView: View {
                 try? await Task.sleep(for: .seconds(5))
             }
         }
+    }
+
+    private func requestCode() async {
+        guard let api = model.api else { return }
+        pairing = true; pairError = nil
+        defer { pairing = false }
+        do {
+            try await api.post("/api/pair", body: ["phone": phone])
+            await model.refreshStatus()
+        } catch { pairError = error.localizedDescription }
     }
 
     private func loadGroups() async {
