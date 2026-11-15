@@ -134,7 +134,7 @@ export async function startWhatsApp() {
   const sock = makeWASocket({
     auth: state,
     logger,
-    browser: Browsers.macOS('Desktop'),   // desktop identity => fuller history sync
+    browser: Browsers.macOS('Chrome'),    // WhatsApp rejects the 'Desktop' identity at pairing (close 428, no QR)
     syncFullHistory: true,
     markOnlineOnConnect: false,           // don't show him as "online" or send read receipts
     getMessage: async () => undefined,
