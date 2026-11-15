@@ -57,7 +57,7 @@ DATA_DIR=./demo node scripts/seed.js && DATA_DIR=./demo DASHBOARD_PASSWORD=test 
 ### One-time setup (about 10 minutes)
 1. **Apple Developer Program** membership ($99/yr) on the Apple ID that will publish it.
 2. In **Xcode → Settings → Accounts**, sign in with that Apple ID. Xcode 26 or later is required for uploads.
-3. Pick a bundle ID (default `com.aryaman.caretracker` in `ios/project.yml`; change it if you like).
+3. Pick a bundle ID (default `com.ahrimane.caretracker` in `ios/project.yml`; change it if you like).
 4. **App Store Connect → Apps → + → New App**: platform iOS, name "Care Tracker" (or any unique name), select that bundle ID (register it at developer.apple.com → Identifiers if it isn't listed), SKU anything.
 5. Find your **Team ID**: developer.apple.com/account → Membership details.
 

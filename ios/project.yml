@@ -1,6 +1,6 @@
 name: CareTracker
 options:
-  bundleIdPrefix: com.caretracker
+  bundleIdPrefix: com.ahrimane
   deploymentTarget:
     iOS: "17.0"
   createIntermediateGroups: true
@@ -9,7 +9,7 @@ settings:
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
     SWIFT_VERSION: "5.0"
-    DEVELOPMENT_TEAM: ""            # <- your 10-character Apple Team ID (or pass TEAM_ID to the script)
+    DEVELOPMENT_TEAM: Z428Z377RQ
 targets:
   CareTracker:
     type: application
@@ -17,7 +17,7 @@ targets:
     sources: [CareTracker]
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.aryaman.caretracker   # must match the app you create in App Store Connect
+        PRODUCT_BUNDLE_IDENTIFIER: com.ahrimane.caretracker   # must match the app you create in App Store Connect
         PRODUCT_NAME: CareTracker
         INFOPLIST_FILE: CareTracker/Info.plist
         GENERATE_INFOPLIST_FILE: NO
