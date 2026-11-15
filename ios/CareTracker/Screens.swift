@@ -32,24 +32,28 @@ struct MainTabs: View {
 
 struct SignInView: View {
     @EnvironmentObject private var model: AppModel
-    @State private var server = UserDefaults.standard.string(forKey: "server") ?? ""
+    @State private var server = UserDefaults.standard.string(forKey: "server") ?? AppModel.defaultServer
     @State private var password = ""
     @State private var busy = false
     @State private var error: String?
+    @State private var showServer = false
 
     var body: some View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("your-app.up.railway.app", text: $server)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    SecureField("Dashboard password", text: $password)
-                } header: {
-                    Text("Tracker server")
+                    SecureField("Password", text: $password)
+                    if showServer {
+                        TextField("your-app.up.railway.app", text: $server)
+                            .keyboardType(.URL)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                    }
                 } footer: {
-                    Text("The Railway address and the DASHBOARD_PASSWORD you set there.")
+                    // The server is built in; the field is only for pointing the app somewhere else.
+                    if !showServer {
+                        Button("Use a different server") { showServer = true }.font(.footnote)
+                    }
                 }
                 Section {
                     Button {

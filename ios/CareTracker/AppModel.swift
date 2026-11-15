@@ -57,6 +57,9 @@ final class AppModel: ObservableObject {
     @Published var status: ServerStatus?
     @Published var errorMessage: String?
 
+    /// The Railway deployment; pre-filled so sign-in only asks for the password.
+    static let defaultServer = "https://care-tracker-production-90cb661f.up.railway.app"
+
     init() {
         if let s = UserDefaults.standard.string(forKey: "server") { baseURL = URL(string: s) }
         token = Keychain.read("token")
