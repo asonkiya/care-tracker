@@ -1,4 +1,5 @@
 name: iOS build check
+# Compiles the iOS app on every iOS change (no signing).
 
 on:
   workflow_dispatch:
