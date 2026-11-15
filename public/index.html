@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#f6f4ef">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Care Tracker</title>
+<style>
+  :root {
+    --bg: #f6f4ef; --card: #fff; --ink: #1d2320; --muted: #6b726e; --line: #e6e2d9;
+    --accent: #2f6f4f; --accent-soft: #e3efe7; --warn: #a3542a; --warn-soft: #f7e6dc;
+    --r: 14px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #141716; --card: #1d211f; --ink: #e9ece9; --muted: #98a09b; --line: #2c312e;
+            --accent: #7cc49b; --accent-soft: #22342a; --warn: #e3a07a; --warn-soft: #3a2a21; }
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+  header { position: sticky; top: 0; z-index: 5; background: var(--bg); padding: calc(env(safe-area-inset-top) + 14px) 18px 8px; }
+  header h1 { margin: 0; font-size: 22px; letter-spacing: -.02em; }
+  header .sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+  main { padding: 6px 14px calc(90px + env(safe-area-inset-bottom)); max-width: 640px; margin: 0 auto; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 22px 4px 8px; font-weight: 600; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+  .row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-top: 1px solid var(--line); }
+  .row:first-child { border-top: 0; }
+  .row .main { flex: 1; min-width: 0; }
+  .row .t { font-weight: 550; }
+  .row .m { color: var(--muted); font-size: 13px; margin-top: 1px; }
+  .empty { padding: 16px 14px; color: var(--muted); font-size: 14px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); text-transform: capitalize; }
+  .pill.warn { background: var(--warn-soft); color: var(--warn); }
+  .src { background: none; border: 0; color: var(--muted); font-size: 12px; padding: 4px 0 0; cursor: pointer; text-decoration: underline dotted; }
+  .check { flex: none; width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--line); background: none; margin-top: 1px; cursor: pointer; display: grid; place-items: center; color: #fff; font-size: 14px; }
+  .check.on { background: var(--accent); border-color: var(--accent); }
+  .done .t { text-decoration: line-through; color: var(--muted); }
+  .banner { margin: 10px 0 0; padding: 10px 14px; border-radius: var(--r); background: var(--warn-soft); color: var(--warn); font-size: 14px; }
+  nav { position: fixed; bottom: 0; left: 0; right: 0; display: flex; background: var(--card); border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+  nav button { flex: 1; background: none; border: 0; padding: 10px 0 9px; font-size: 11px; color: var(--muted); cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+  nav button svg { width: 22px; height: 22px; }
+  nav button.on { color: var(--accent); font-weight: 600; }
+  input[type=search], input[type=password] { width: 100%; padding: 12px 14px; border-radius: var(--r); border: 1px solid var(--line); background: var(--card); color: var(--ink); font-size: 16px; }
+  .btn { display: inline-block; padding: 11px 16px; border-radius: 12px; border: 0; background: var(--accent); color: #fff; font-weight: 600; font-size: 15px; cursor: pointer; }
+  .btn.ghost { background: var(--card); color: var(--ink); border: 1px solid var(--line); }
+  .msg { padding: 10px 14px; border-top: 1px solid var(--line); }
+  .msg:first-child { border-top: 0; }
+  .msg .who { font-size: 12px; color: var(--muted); }
+  .msg .who b { color: var(--ink); font-weight: 600; }
+  .msg .body { white-space: pre-wrap; word-wrap: break-word; margin-top: 2px; }
+  .msg img { max-width: 100%; border-radius: 10px; margin-top: 6px; }
+  .msg.me { background: var(--accent-soft); }
+  .day { font-size: 12px; font-weight: 600; color: var(--muted); padding: 12px 4px 6px; }
+  .sheet { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: none; align-items: flex-end; z-index: 10; }
+  .sheet.open { display: flex; }
+  .sheet .panel { background: var(--bg); width: 100%; max-width: 640px; margin: 0 auto; border-radius: 18px 18px 0 0; max-height: 75vh; overflow: auto; padding: 16px 14px calc(20px + env(safe-area-inset-bottom)); }
+  .qr { display: block; margin: 14px auto; width: 260px; max-width: 100%; background: #fff; padding: 10px; border-radius: 12px; }
+  .center { text-align: center; }
+  .stack > * + * { margin-top: 10px; }
+  .kv { display: flex; justify-content: space-between; padding: 10px 14px; border-top: 1px solid var(--line); font-size: 14px; }
+  .kv:first-child { border-top: 0; } .kv span:first-child { color: var(--muted); }
+</style>
+</head>
+<body>
+<header><h1 id="title">Today</h1><div class="sub" id="sub"></div></header>
+<main id="view"></main>
+<nav id="nav"></nav>
+<div class="sheet" id="sheet" onclick="if(event.target===this)closeSheet()"><div class="panel" id="sheetBody"></div></div>
+
+<script>
+const icons = {
+  today: '<path d="M4 7h16M4 12h16M4 17h10"/>',
+  plan: '<path d="M9 4h6l1 2h3v14H5V6h3z"/><path d="M9 12l2 2 4-4"/>',
+  todo: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/>',
+  changes: '<path d="M4 12a8 8 0 1 0 3-6.2"/><path d="M4 4v4h4"/>',
+  history: '<path d="M5 5h14v10H9l-4 4z"/>',
+  setup: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+};
+const tabs = [['today', 'Today'], ['plan', 'Plan'], ['todo', 'To-do'], ['changes', 'Changes'], ['history', 'Chat'], ['setup', 'Setup']];
+let tab = location.hash.slice(1) || 'today';
+let status = null;
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const when = (ts) => new Date(ts * 1000).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const dayLabel = (d) => new Date(d + 'T12:00:00').toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
+const src = (id) => id ? `<button class="src" onclick="showSource('${esc(id)}')">source</button>` : '';
+const section = (title, rows, empty) => `<h2>${title}</h2><div class="card">${rows.length ? rows.join('') : `<div class="empty">${empty}</div>`}</div>`;
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { ...opts, headers: { 'content-type': 'application/json' }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  if (r.status === 401) { renderLogin(); throw new Error('login'); }
+  return r.json();
+}
+
+function renderNav() {
+  $('#nav').innerHTML = tabs.map(([k, l]) => `<button class="${k === tab ? 'on' : ''}" onclick="go('${k}')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${icons[k]}</svg>${l}</button>`).join('');
+}
+function go(k) { tab = k; location.hash = k; render(); scrollTo(0, 0); }
+
+function renderLogin() {
+  $('#nav').innerHTML = ''; $('#title').textContent = 'Care Tracker'; $('#sub').textContent = '';
+  $('#view').innerHTML = `<form class="stack" style="margin-top:30px" onsubmit="login(event)">
+    <input type="password" id="pw" placeholder="Password" autocomplete="current-password" autofocus>
+    <button class="btn" style="width:100%">Open</button><div id="err" class="m center"></div></form>`;
+}
+async function login(e) {
+  e.preventDefault();
+  const r = await fetch('/api/login', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ password: $('#pw').value }) });
+  if (r.ok) boot(); else $('#err').textContent = 'Wrong password';
+}
+
+function banners() {
+  if (!status) return '';
+  const b = [];
+  if (status.whatsapp !== 'open') b.push(`WhatsApp is ${status.whatsapp === 'qr' ? 'not linked yet' : 'disconnected'} — <a href="#setup" onclick="go('setup')">open Setup</a>.`);
+  else if (!status.group) b.push(`Pick the care group in <a href="#setup" onclick="go('setup')">Setup</a>.`);
+  if (!status.hasKey) b.push('ANTHROPIC_API_KEY is not set, so messages are stored but not organised.');
+  else if (status.extraction.lastError) b.push(`Last update failed: ${esc(status.extraction.lastError)}`);
+  return b.map((x) => `<div class="banner">${x}</div>`).join('');
+}
+
+async function render() {
+  renderNav();
+  const titles = { today: 'Today', plan: 'Current plan', todo: 'To-do', changes: 'Changes', history: 'Chat', setup: 'Setup' };
+  $('#title').textContent = titles[tab];
+  const st = status?.extraction;
+  $('#sub').textContent = status?.group ? `${status.group.name}${st?.running ? ' · updating…' : st?.pending ? ` · ${st.pending} new` : ''}` : '';
+  const v = $('#view');
+  if (tab === 'setup') return renderSetup();
+  if (tab === 'history') return renderHistory();
+  const o = await api('/api/overview');
+  if (tab === 'today') {
+    const missing = !o.todayLogs.length && o.supplements.length;
+    v.innerHTML = banners() +
+      section('Supplements', o.supplements.map((s) => `<div class="row">
+        <button class="check ${s.checked ? 'on' : ''}" onclick="check(${s.id}, this)">${s.checked ? '✓' : ''}</button>
+        <div class="main"><div class="t">${esc(s.name)}${s.dose ? ` · ${esc(s.dose)}` : ''}</div>
+        <div class="m">${esc(s.timing || 'timing not specified')}${s.notes ? ` — ${esc(s.notes)}` : ''}</div></div></div>`), 'No supplements prescribed yet.') +
+      section('Needs your attention', o.items.filter((i) => i.owner === 'me').slice(0, 6).map(itemRow), 'Nothing waiting on you.') +
+      section(`Logged today${missing ? ' <span class="pill warn">nothing yet</span>' : ''}`, o.todayLogs.map(logRow), 'No logs sent today.') +
+      section('Recent changes', o.changes.slice(0, 4).map(changeRow), 'No changes yet.');
+  }
+  if (tab === 'plan') {
+    const byCat = {};
+    o.rules.forEach((r) => (byCat[r.category] ||= []).push(r));
+    v.innerHTML = banners() +
+      section('Supplements & medicines', o.supplements.map((s) => `<div class="row"><div class="main">
+        <div class="t">${esc(s.name)}</div><div class="m">${[s.dose, s.timing].filter(Boolean).map(esc).join(' · ') || '—'}</div>
+        ${s.notes ? `<div class="m">${esc(s.notes)}</div>` : ''}<div class="m">since ${when(s.started_ts)} ${src(s.source_msg)}</div></div></div>`), 'None yet.') +
+      (Object.keys(byCat).length ? Object.entries(byCat).map(([c, rs]) => section(c, rs.map((r) => `<div class="row"><div class="main">
+        <div>${esc(r.text)}</div><div class="m">${when(r.ts)} ${src(r.source_msg)}</div></div></div>`), '')).join('') : section('Guidelines', [], 'No diet or lifestyle rules yet.')) +
+      (o.stopped.length ? section('Stopped', o.stopped.map((s) => `<div class="row done"><div class="main"><div class="t">${esc(s.name)}</div>
+        <div class="m">stopped ${when(s.updated_ts)} ${src(s.source_msg)}</div></div></div>`), '') : '');
+  }
+  if (tab === 'todo') {
+    const mine = o.items.filter((i) => i.owner === 'me'), theirs = o.items.filter((i) => i.owner !== 'me');
+    v.innerHTML = banners() + section('On you', mine.map(itemRow), 'All clear.') +
+      section('Waiting on the team', theirs.map(itemRow), 'Nothing pending.') +
+      (o.done.length ? section('Recently done', o.done.map(itemRow), '') : '');
+  }
+  if (tab === 'changes') {
+    const logs = await api('/api/logs?days=14');
+    const byDay = {};
+    logs.forEach((l) => (byDay[l.date] ||= []).push(l));
+    v.innerHTML = banners() + section('Plan changes', o.changes.map(changeRow), 'No changes yet.') +
+      `<h2>Your logs · last 14 days</h2>` + (Object.keys(byDay).length ? Object.entries(byDay).map(([d, ls]) =>
+        `<div class="day">${dayLabel(d)}</div><div class="card">${ls.map(logRow).join('')}</div>`).join('') : '<div class="card"><div class="empty">No logs yet.</div></div>');
+  }
+}
+
+const itemRow = (i) => `<div class="row ${i.status === 'done' ? 'done' : ''}">
+  <button class="check ${i.status === 'done' ? 'on' : ''}" onclick="toggleItem(${i.id})">${i.status === 'done' ? '✓' : ''}</button>
+  <div class="main"><div class="t">${esc(i.title)}</div>
+  ${i.details ? `<div class="m">${esc(i.details)}</div>` : ''}
+  ${i.resolution ? `<div class="m">→ ${esc(i.resolution)}</div>` : ''}
+  <div class="m"><span class="pill ${i.kind === 'question' ? 'warn' : ''}">${esc(i.kind)}</span> ${i.due ? `due ${esc(i.due)} · ` : ''}${when(i.ts)} ${src(i.source_msg)}</div></div></div>`;
+const logRow = (l) => `<div class="row"><div class="main"><div><span class="pill">${esc(l.category)}</span> ${esc(l.summary)}${l.value ? ` <b>${esc(l.value)}</b>` : ''}</div>
+  <div class="m">${when(l.ts)} ${src(l.source_msg)}</div></div></div>`;
+const changeRow = (c) => `<div class="row"><div class="main"><div>${esc(c.summary)}</div><div class="m">${when(c.ts)} ${src(c.source_msg)}</div></div></div>`;
+
+const msgHtml = (m) => `<div class="msg ${m.from_me ? 'me' : ''}"><div class="who"><b>${esc(m.from_me ? 'You' : m.sender_name || 'Team')}</b> · ${when(m.ts)}</div>
+  <div class="body">${esc(m.text)}</div>
+  ${m.media_path && m.media_kind === 'image' ? `<img loading="lazy" src="/media/${encodeURIComponent(m.media_path)}">` : ''}
+  ${m.media_path && m.media_kind === 'pdf' ? `<a href="/media/${encodeURIComponent(m.media_path)}" target="_blank">Open PDF</a>` : ''}</div>`;
+
+async function renderHistory(q = '') {
+  const rows = await api('/api/messages?q=' + encodeURIComponent(q));
+  let last = '';
+  $('#view').innerHTML = `<input type="search" placeholder="Search the group…" value="${esc(q)}" onkeydown="if(event.key==='Enter')renderHistory(this.value)">` +
+    `<div style="margin-top:6px">` + (rows.length ? rows.map((m) => {
+      const d = new Date(m.ts * 1000).toDateString(); const head = d !== last ? `<div class="day">${d}</div>` : ''; last = d;
+      return head + `<div class="card">${msgHtml(m)}</div>`;
+    }).join('') : '<div class="card"><div class="empty">No messages.</div></div>') + '</div>';
+}
+
+async function renderSetup() {
+  status = await api('/api/status');
+  const s = status, v = $('#view');
+  let html = '';
+  if (s.whatsapp === 'qr' && s.qr) {
+    html += `<div class="card" style="padding:16px"><div class="t">Link WhatsApp</div>
+      <div class="m">On the phone: WhatsApp → Settings → Linked devices → Link a device, then scan this. It refreshes automatically.</div>
+      <img class="qr" src="${s.qr}"></div>`;
+  } else if (s.whatsapp !== 'open') {
+    html += `<div class="card"><div class="empty">Connecting to WhatsApp…</div></div>`;
+  }
+  if (s.whatsapp === 'open' && !s.group) {
+    const groups = await api('/api/groups');
+    html += section('Which group should be tracked?', groups.map((g) => `<div class="row"><div class="main"><div class="t">${esc(g.name)}</div>
+      <div class="m">${g.size} members${g.buffered ? ` · ${g.buffered} past messages synced` : ''}</div></div>
+      <button class="btn ghost" onclick='pick(${JSON.stringify(g.jid)}, ${JSON.stringify(g.name)})'>Track</button></div>`), 'No groups found yet — give it a minute after linking.');
+  }
+  html += `<h2>Status</h2><div class="card">
+    <div class="kv"><span>WhatsApp</span><span>${esc(s.whatsapp)}${s.me ? ` · ${esc(s.me)}` : ''}</span></div>
+    <div class="kv"><span>Tracked group</span><span>${esc(s.group?.name || '—')}</span></div>
+    <div class="kv"><span>Messages stored</span><span>${s.messages}</span></div>
+    <div class="kv"><span>Waiting to process</span><span>${s.extraction.pending}${s.extraction.running ? ' (running)' : ''}</span></div>
+    <div class="kv"><span>Last update</span><span>${s.extraction.lastRun ? new Date(s.extraction.lastRun).toLocaleString() : '—'}</span></div>
+    ${s.extraction.lastError ? `<div class="kv"><span>Error</span><span>${esc(s.extraction.lastError)}</span></div>` : ''}</div>
+    <div class="stack" style="margin-top:16px">
+      <button class="btn" style="width:100%" onclick="post('/api/process-now')">Process new messages now</button>
+      <button class="btn ghost" style="width:100%" onclick="if(confirm('Rebuild everything from the stored messages? This re-runs the AI over the whole history.'))post('/api/reprocess')">Rebuild from history</button>
+      <button class="btn ghost" style="width:100%" onclick="if(confirm('Unlink WhatsApp from this tracker?'))post('/api/unlink')">Unlink WhatsApp</button>
+    </div>`;
+  v.innerHTML = html;
+}
+
+async function pick(jid, name) {
+  const r = await api('/api/group', { method: 'POST', body: { jid, name } });
+  alert(`Tracking "${name}". ${r.backfilled} past messages imported — the dashboard fills in over the next few minutes.`);
+  go('today');
+}
+async function post(p) { await api(p, { method: 'POST' }); setTimeout(render, 600); }
+async function check(id, el) { const r = await api('/api/check/' + id, { method: 'POST' }); el.classList.toggle('on', r.checked); el.textContent = r.checked ? '✓' : ''; }
+async function toggleItem(id) { await api(`/api/items/${id}/toggle`, { method: 'POST' }); render(); }
+
+async function showSource(id) {
+  const [m] = await api('/api/messages?ids=' + encodeURIComponent(id));
+  $('#sheetBody').innerHTML = `<h2 style="margin-top:0">Original message</h2><div class="card">${m ? msgHtml(m) : '<div class="empty">Not found.</div>'}</div>`;
+  $('#sheet').classList.add('open');
+}
+function closeSheet() { $('#sheet').classList.remove('open'); }
+
+async function boot() {
+  try { status = await api('/api/status'); } catch { return; }
+  render();
+  setInterval(async () => {
+    try {
+      const prev = JSON.stringify([status?.whatsapp, status?.extraction?.lastRun, status?.qr]);
+      status = await api('/api/status');
+      if (JSON.stringify([status.whatsapp, status.extraction.lastRun, status.qr]) !== prev && tab !== 'history') render();
+    } catch {}
+  }, 8000);
+}
+window.onhashchange = () => { const t = location.hash.slice(1); if (t && t !== tab) { tab = t; render(); } };
+boot();
+</script>
+</body>
+</html>

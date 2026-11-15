@@ -1,0 +1,28 @@
+name: TestFlight
+
+on:
+  workflow_dispatch:          # "Run workflow" button in the GitHub app/site
+  push:
+    branches: [main]
+    paths: ['ios/**']
+
+jobs:
+  upload:
+    runs-on: macos-26
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Build and upload to TestFlight
+        working-directory: ios
+        env:
+          TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
+          BUILD_NUMBER: ${{ github.run_number }}${{ github.run_attempt }}
+        run: |
+          export ASC_KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
+          printf '%s' "$ASC_KEY_P8" > "$ASC_KEY_PATH"
+          ./testflight.sh

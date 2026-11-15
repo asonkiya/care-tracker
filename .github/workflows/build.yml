@@ -1,0 +1,23 @@
+name: iOS build check
+
+on:
+  workflow_dispatch:
+  push:
+    paths: ['ios/**', '.github/workflows/build.yml']
+
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -version
+      - name: Compile for the simulator (no signing needed)
+        working-directory: ios
+        run: |
+          command -v xcodegen >/dev/null || brew install xcodegen
+          xcodegen generate
+          xcodebuild -project CareTracker.xcodeproj -scheme CareTracker \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO build | tail -80
+          exit ${PIPESTATUS[0]}
