@@ -18,7 +18,7 @@ Personal tool for a friend who is a *client* in a WhatsApp group with his care t
 - Local dev: run the server in Docker (`docker build`, as Railway does); better-sqlite3 13 segfaults on Node 20 and needs Node 22+.
 - The iOS app has the Railway URL built in (`AppModel.defaultServer`) and no sign-in screen: `testflight.sh` bakes `DASHBOARD_PASSWORD` from the local `.env` into the build (Info.plist `TrackerPassword`) and the app signs itself in. The server still requires the password (the repo and URL are public), so changing it means shipping a new build. Builds without it fall back to the sign-in form.
 - iOS: `ios/CareTracker.xcodeproj` is hand-written (no XcodeGen needed); `ios/project.yml` is kept in sync for XcodeGen users. Team `Z428Z377RQ`, bundle ID `com.ahrimane.caretracker`, iOS 17+.
-- The iOS app compiles cleanly (Xcode 26.6) and is on TestFlight: version 1.0, latest build `2611211200` uploaded 2026-11-15. App Store Connect record is named "Dietitian manager" (Apple ID 6835054917).
+- The iOS app compiles cleanly (Xcode 26.6) and is on TestFlight: version 1.0, latest build `2611211200` uploaded 2026-11-21. App Store Connect record is named "Dietitian manager" (Apple ID 6835054917).
 - GitHub Actions can't run: the account is locked for a billing issue. Build locally instead.
 
 ## Shipping a new iOS build to TestFlight
