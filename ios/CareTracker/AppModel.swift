@@ -64,6 +64,28 @@ final class AppModel: ObservableObject {
     /// The Railway deployment; pre-filled so sign-in only asks for the password.
     static let defaultServer = "https://care-tracker-production-90cb661f.up.railway.app"
 
+    /// Server password baked in at build time (testflight.sh reads it from ../.env, which is not in git),
+    /// so the app opens straight into the tracker. Empty in plain dev builds, which show the sign-in form.
+    static let builtInPassword = (Bundle.main.object(forInfoDictionaryKey: "TrackerPassword") as? String) ?? ""
+
+    /// Set when the automatic sign-in was refused, so the manual form is shown instead of retrying forever.
+    @Published private(set) var autoSignInFailed = false
+    var signsInAutomatically: Bool { !Self.builtInPassword.isEmpty && !autoSignInFailed }
+
+    func autoSignIn() async {
+        while !isSignedIn && signsInAutomatically {
+            do {
+                try await signIn(server: Self.defaultServer, password: Self.builtInPassword)
+            } catch APIError.server(let message) where message == "Wrong password." {
+                autoSignInFailed = true
+            } catch {
+                errorMessage = "Can't reach the tracker. Retrying…"
+                try? await Task.sleep(for: .seconds(3))
+            }
+        }
+        errorMessage = nil
+    }
+
     init() {
         if let s = UserDefaults.standard.string(forKey: "server") { baseURL = URL(string: s) }
         token = Keychain.read("token")

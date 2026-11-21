@@ -6,7 +6,15 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            if model.isSignedIn { MainTabs() } else { SignInView() }
+            if model.isSignedIn { MainTabs() }
+            else if model.signsInAutomatically {
+                VStack(spacing: 12) {
+                    ProgressView()
+                    if let e = model.errorMessage { Text(e).font(.subheadline).foregroundStyle(.secondary) }
+                }
+                .task { await model.autoSignIn() }
+            }
+            else { SignInView() }
         }
         .onChange(of: scenePhase) { _, phase in
             if phase == .active { Task { await model.refresh() } }
@@ -415,8 +423,10 @@ struct SetupView: View {
                 Button("Rebuild from history") { confirmRebuild = true }
                 Button("Unlink WhatsApp", role: .destructive) { confirmUnlink = true }
             }
-            Section {
-                Button("Sign out of this app", role: .destructive) { model.signOut() }
+            if !model.signsInAutomatically {
+                Section {
+                    Button("Sign out of this app", role: .destructive) { model.signOut() }
+                }
             }
         }
         .navigationTitle("Setup")

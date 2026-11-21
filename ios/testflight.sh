@@ -20,12 +20,16 @@ if [ -n "${ASC_KEY_PATH:-}" ]; then
   AUTH=(-authenticationKeyPath "$ASC_KEY_PATH" -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID")
 fi
 
+# Bake the server password into the app so it opens without a sign-in screen (read from ../.env, not in git).
+TRACKER_PASSWORD=${TRACKER_PASSWORD:-$(grep -s '^DASHBOARD_PASSWORD=' ../.env | cut -d= -f2- || true)}
+[ -n "$TRACKER_PASSWORD" ] || echo "⚠️  No DASHBOARD_PASSWORD in ../.env — this build will show the sign-in screen."
+
 BUILD=${BUILD_NUMBER:-$(date +%y%m%d%H%M)}   # unique, always-increasing build number
 rm -rf build
 
 xcodebuild -project CareTracker.xcodeproj -scheme CareTracker -configuration Release \
   -destination 'generic/platform=iOS' -archivePath build/CareTracker.xcarchive \
-  DEVELOPMENT_TEAM="$TEAM_ID" CURRENT_PROJECT_VERSION="$BUILD" \
+  DEVELOPMENT_TEAM="$TEAM_ID" CURRENT_PROJECT_VERSION="$BUILD" TRACKER_PASSWORD="$TRACKER_PASSWORD" \
   -allowProvisioningUpdates ${AUTH[@]+"${AUTH[@]}"} archive
 
 xcodebuild -exportArchive -archivePath build/CareTracker.xcarchive \
